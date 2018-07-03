@@ -1,0 +1,77 @@
+---
+title: "Statistical Inference - Basic inferential data analysis"
+author: "VN"
+date: "9 September 2017"
+output: pdf_document
+---
+##Overview  
+This document has been prepared for the submission of the assignment (part 2) of Statistical Interfernce course. This involves an exercise around Inferential data analysis of the ToothGrowth data.
+
+##Assignment  
+Dataset : 
+The response is the length of odontoblasts (teeth) in each of 10 guinea pigs at each of three dose levels of Vitamin C (0.5, 1, and 2 mg) with each of two delivery methods (supp - orange juice or ascorbic acid)  
+Using the above data set :  
+- Provide a basic summary of the data.  
+- Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose.  
+- State your conclusions and the assumptions needed for your conclusions.  
+
+
+###Global settings
+Set working directory, load dataset and ggplot2  
+
+```{r, include=FALSE}
+##opts_chunk$set(echo=TRUE)
+setwd("C:/Users/User/Coursera/Cs6Wk4")
+library(ggplot2)
+library(datasets)
+data(ToothGrowth)
+```
+###Data Summary
+Data summarized using - summary, str functions
+```{r, echo=TRUE}
+str(ToothGrowth)
+summary(ToothGrowth)
+```
+Variable dose as factor
+```{r, echo=TRUE}
+ToothGrowth$dose<-as.factor(ToothGrowth$dose)
+```
+###Visualize Data - Dose & Delivery method
+Boxplots to show response in length for the dose as factor
+```{r, echo=TRUE}
+ggplot(aes(x=dose, y=len), data=ToothGrowth) + geom_boxplot(aes(fill=dose))
+```
+Boxplots to show response in length for the supplement as factor
+```{r, echo=TRUE}
+ggplot(aes(x=supp, y=len), data=ToothGrowth) + geom_boxplot(aes(fill=supp))
+```
+
+###Confidence intervals and Hypothesis tests to compare tooth growth by supp and dose
+*Suppliment Type*
+To check the tooth growth by supp
+```{r, echo=TRUE}
+# check for group differences due to different supplement type
+t.test(len ~ supp, data = ToothGrowth)
+```
+The p-value is 0.06, and the confidence interval contains zero. This indicates that we can not reject the null hypothesis. That is the different supplement types have no effect on tooth length
+*Dosage*
+To check the tooth growth by dosage. For this the data is being paired amongst the values of 0.5,1.0 & 2.0
+```{r, echo=TRUE}
+# first create three sub-groups as per dose level pairs
+ToothGrowth.doses_0.5_1.0 <- subset (ToothGrowth, dose %in% c(0.5, 1.0)) 
+ToothGrowth.doses_0.5_2.0 <- subset (ToothGrowth, dose %in% c(0.5, 2.0)) 
+ToothGrowth.doses_1.0_2.0 <- subset (ToothGrowth, dose %in% c(1.0, 2.0)) 
+
+# Check for group differences due to different dose levels (0.5, 1.0)
+t.test(len ~ dose, data = ToothGrowth.doses_0.5_1.0)
+# Check for group differences due to different dose levels (0.5, 2.0)
+t.test(len ~ dose, data = ToothGrowth.doses_0.5_2.0)
+# Check for group differences due to different dose levels (1.0, 2.0)
+t.test(len ~ dose, data = ToothGrowth.doses_1.0_2.0)
+```
+For the three dose level pairs, the p-value is less than 0.05, and the confidence interval does not contain zero in all cases. Also, the mean tooth length increases on raising the dose level. This indicates that we can reject the null hypothesis, and establish that increasing the dose level leads to an increase in tooth length  
+
+##Conclusion  
+The confidence intervals and Hyposthesis test included above can be used to conclude :  
+-  *1*  Supplement types have no effect on tooth length   
+-  *2*  As the dosage increases tooth length increases  

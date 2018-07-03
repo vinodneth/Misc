@@ -1,0 +1,162 @@
+Coursera - Analysis Weather events - based on harm to population and economic consequence  
+==============================================
+Assignment submission for Coursera - Course 5, Week 4  
+
+## Synopsis  
+*This document analyses the weather events to identify those which are most harmful and have highest economic consequence. The U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database shared as part of the Coursera assignment has been used for the analysis. For identifying the most harmful the variables on fatalities and injuries in the database have been analysed seperately. For economic consequence the total of the impact from property and crop damage has been considered. NOAA database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage. *
+
+## Data Processing  
+The dataset has been trimmed to retain the relevant columns for the analysis and recent years which have most meaningful data. Further processing for yearwise aggregates have been completed to arrive at the analysis  
+
+*Load libraries and Data* 
+``` {r}
+library(dplyr)
+
+storm<-read.csv("StormData.csv.bz2")
+
+```
+
+*Processing of Data* 
+```{r}
+## Trim columns to what is required for the analysis
+keepCol <- c("BGN_DATE", "EVTYPE", "FATALITIES", "INJURIES", "PROPDMG", "PROPDMGEXP", "CROPDMG", "CROPDMGEXP")
+reducedStormData <- storm[, keepCol]
+
+## Append column to capture the year
+reducedStormData$year <- as.numeric(format(as.Date(reducedStormData$BGN_DATE, format = "%m/%d/%Y %H:%M:%S"), "%Y"))
+hist(reducedStormData$year, breaks = 30)
+
+## Trim data to keep later years which has more meaningful data - using quantile 
+quant25percent <-quantile(reducedStormData$year, 0.25)
+rStorm <- reducedStormData[reducedStormData$year >= quant25percent, ]
+dim(rStorm)
+```
+
+The final dataset uses data after  `r quant25percent`  
+
+
+## Results 
+This section answers the two questions from the assignment.  
+*Q1 : Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?*  
+The dataset is analyzed for the fatalities and injury counts to arrive at the answer
+
+Fatalities View
+```{r}
+rStorm_tbl <- tbl_df(rStorm)
+byFATALITIES <- group_by(rStorm_tbl, EVTYPE)
+top10Fatalities<- summarise(byFATALITIES,
+                total = sum(FATALITIES)
+) %>% arrange(desc(total)) %>% top_n(10)
+top10Fatalities
+```
+** EXCESS HEAT caused maximum Fatalities **  
+Injury View
+```{r}
+byINJURIES <- group_by(rStorm_tbl, EVTYPE)
+top10Injuries <- summarise(byINJURIES ,
+                 total = sum(INJURIES)
+) %>% arrange(desc(total)) %>% top_n(10)
+top10Injuries
+```
+** TORNADO caused maximum Injuries **    
+
+The above finding as a histogram
+
+```{r}
+par(mfrow=c(1,2))
+barplot(top10Fatalities$total, 
+        names = top10Fatalities$EVTYPE,
+        xlab = "Event Type",
+        ylab = "Total Deaths",
+        main = "Top 10 Fatal Weather Events")
+
+
+barplot(top10Injuries$total, 
+        names = top10Injuries$EVTYPE,
+        xlab = "Event Type",
+        ylab = "Total Deaths",
+        main = "Top 10 Injuries Weather Events")
+```
+
+
+*Q2 : Across the United States, which types of events have the greatest economic consequences?*    
+The economic consequence will need to be identified by totalling the property and crop damages. The property damage and crop damage data will need to be converted into comparable numerical forms using the mutiplier variable provided for each observation    
+
+Additional Processing of Data is required for answering this question  
+
+Helper functions  written for converting multiplier variable
+```{r}
+## converts the multiplier value in data to power of TEN
+toTenPower <- function(x){
+    if(is.numeric(x)) {
+        x <- x
+    }
+    else if(grepl("h", x, ignore.case=TRUE)) {
+        x <- 2
+    }
+    else if(grepl("k", x, ignore.case=TRUE)) {
+        x <- 3
+    }
+    else if(grepl("m", x, ignore.case=TRUE)) {
+        x <- 6
+    }
+    else if(grepl("b", x, ignore.case=TRUE)) {
+        x <- 9
+    }
+    else if(x == "" || x == " "){
+        x <- 0
+    }
+    else{
+        x <- NA
+    }
+    x
+}
+## function to take two parameters num and exp and convert it to one absolute value using above function. 
+## non integers become 0
+calculateAmount <- function(num, exp){
+    pow <- toTenPower(exp)
+    if(is.numeric(num)){
+        num <- num * (10 ^ pow)
+    }
+    
+    if(!is.numeric(num)){
+        num <- 0
+    }
+    
+    num
+}
+```
+
+Append columns for property and crop damage after conversion and arrive at the total damage value
+
+```{r}
+rStorm$propDamage <- mapply(calculateAmount, rStorm$PROPDMG, rStorm$PROPDMGEXP)
+rStorm$cropDamage <- mapply(calculateAmount, rStorm$CROPDMG, rStorm$CROPDMGEXP)
+
+totalDam <- aggregate(propDamage + cropDamage~EVTYPE, data=rStorm, sum)
+names(totalDam)[2] <- "total"
+totalDam10 <- arrange(totalDam, desc(total)) %>% top_n(10)
+
+
+```
+
+The top events causing economic consequence are 
+
+```{r}
+totalDam10
+```
+** Based on the above FLOOD causes the maximum economic damage **
+
+Histogram representation of the data is below 
+```{r}
+barplot(totalDam10$total, 
+        names = totalDam10$EVTYPE,
+        cex.names = 0.7,
+        cex.axis = 0.7,
+        xlab = "Event Type",
+        ylab = "Total Crop Damage ($)",
+        main = "Top 10 Events Causing \n Most Total Damage")
+```
+
+
+

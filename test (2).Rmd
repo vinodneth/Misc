@@ -1,0 +1,42 @@
+---
+title: "test"
+author: "VN"
+date: "2 December 2017"
+output:
+  slidy_presentation: default
+  ioslides_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Overview    
+The  App helps user predict the hp (horse power) when mpg (miles per gallon) is provided as input. A user friendly interface helps user input the mpg to get the predicted hp   
+
+## UI Layer   
+The UI has been built using the shiny library. As in figure below UI has provision :    
+- input the mpg using slider in the side bar    
+- plot which shows the model and data points      
+- renders the predicted hp    
+![App User Interface](C:\Users\User\Coursera\Cs9Wk4\AppUI.png)
+
+
+## Server Layer
+
+The mtcars model available with R is used to build a model using lm function.   
+The hp is predicted from this model for input mpg
+
+## Model
+The model used at server
+```{r, echo=TRUE}
+## uses mtcars which is part of R
+dim(mtcars)
+```
+```{r, echo=TRUE, eval=FALSE}
+## model build using lm function
+model<- lm(hp~mpg,data = mtcars)
+## input from ui fed to predict hp  
+modelpred<-predict(model,newdata=data.frame(mpg=mpgInput))
+  
+```

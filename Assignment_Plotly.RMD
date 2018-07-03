@@ -1,0 +1,21 @@
+---
+title: "Plotly Assignment"
+author: "VN"
+date: "25 November 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Assignment : Developing Data Products - week 3. Date : 25th Nov 2017   
+Uses Iris dataset in R for submitting assignment on plotly   
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, comment=FALSE}
+library(datasets)
+library(plotly)
+plot_ly(data=iris, x = ~Sepal.Length, y = ~Petal.Length, color=~Species, type="scatter", mode="markers")
+```

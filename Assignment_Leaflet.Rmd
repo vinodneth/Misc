@@ -1,0 +1,24 @@
+---
+title: "Leaflet Assignment"
+author: "VN"
+date: "20 November 2017"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## R Markdown
+Assignment : Developing Data Products - week 2. Date : 20th Nov 2017   
+The map shows the location of Taj Mahal in India   
+
+
+```{r, echo=FALSE}
+library(leaflet)
+my_map<-leaflet() %>%
+##   addTitle(text="20-Nov-2017") %>%
+ addTiles() %>%
+  addMarkers(lat=27.1750, lng=78.0422, popup="Taj Mahal, India")
+my_map
+```

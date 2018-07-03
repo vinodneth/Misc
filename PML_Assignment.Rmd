@@ -1,0 +1,117 @@
+---
+title: "Coursera : Practical Machine Learning Assignment"
+author: "VN"
+date: "4 November 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Overview
+
+This markup document has been prepared as part of the assignment submission for the coursera session on Practical Machine Learning. The same is available in the githu repository.  
+
+## Assignment  
+In this assignment, the goal is to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants.They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).  
+
+*Data*  
+
+Training data : https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv   
+Test data : https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv   
+
+The data for this project come from this source: http://groupware.les.inf.puc-rio.br/har. It is worth citing Groupware@LES for being generous in allowing their data to be used for this assignment.  
+
+*Goal*  
+- Predicting the manner in which the participants did the exercise. Refer to the “classe” variable in the training set. All other variables can be used as predictor.   
+- Show how the model was built, performed cross validation, and expectation of the sample error and reasons of choices made.   
+- Use the prediction model to predict 20 different test cases.   
+
+## Data Processing   
+### Read assignment data
+
+```{r, echo=TRUE}
+## set working directories and load libraries 
+setwd("C:/Users/User/Coursera/Cs8Wk4")
+library(caret)
+library(rpart)
+library(randomForest)
+library(ElemStatLearn)
+
+## read data files
+trainRaw <- read.csv("pml-training.csv",header=T,sep=",",na.strings=c("NA",""))
+testRaw <- read.csv("pml-testing.csv",header=T,sep=",",na.strings=c("NA",""))
+set.seed(2288)
+```
+
+### Data Partioning   
+The train data set is split to training and validating. Former is used for training the model and the later is used to validate. The test data set which contains 20 observations would be predicted
+
+```{r, echo=TRUE}
+trainRaw <- trainRaw[,-1] # Remove the first column that represents a ID Row
+inTrain = createDataPartition(trainRaw$classe, p=0.60, list=F)
+training = trainRaw[inTrain,]
+validating = trainRaw[-inTrain,]
+```
+
+### Data Cleaning    
+For effective use of the randomforest package, the columns which have less than 60% values have been excluded.   
+
+```{r, echo=TRUE}
+Keep <- c((colSums(!is.na(training[,-ncol(training)])) >= 0.6*nrow(training)))
+training   <-  training[,Keep]
+validating <- validating[,Keep]
+```
+
+### Model   
+As random forest internally does cross validation, model is directly invoked for training below.
+
+```{r, echo=TRUE}
+model <- randomForest(classe~.,data=training)
+model
+```
+Predict function is used on the validating data set. The predict value is compared using confusion matrix
+
+```{r, echo=TRUE}
+confusionMatrix(predict(model,newdata=validating[,-ncol(validating)]),validating$classe)
+```
+Accuracy for the model is calculated as below
+```{r}
+acrcy<-c(as.numeric(predict(model,newdata=validating[,-ncol(validating)])==validating$classe))
+acrcy<-sum(acrcy)*100/nrow(validating)
+
+```
+The model accuracy on the validating set is `r round(acrcy,2)`%. The out of sample error thus is `r round(100-acrcy,2)`%
+
+## Predict Test Data  
+### Preprocess   
+Apply the same preprocessing steps as done on training set to the test data. The test data is coerced to include a row from train which in prediction call is excluded
+```{r, echo=TRUE}
+testRaw <- testRaw[,-1] # Remove the first column that represents a ID Row
+testRaw <- testRaw[ , Keep] # Keep the same columns of testing dataset
+testRaw <- testRaw[,-ncol(testRaw)] # Remove the problem ID
+testing <- rbind(training[100, -59] , testRaw) 
+## row.names(testing) <- c(100, 1:20)
+```
+### Predict   
+```{r, echo=TRUE}
+predictions <- predict(model,newdata=testing[-1,])
+predictions
+```
+### Generate AnswerFiles
+A function has been written to generate the answer file - for the 20 records in testing data
+```{r, echo=TRUE}
+## Function for generating file under answers directory
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("./answers/problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+## Call to function with the prediction done earlier
+pml_write_files(predictions)
+```
+

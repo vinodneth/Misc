@@ -1,0 +1,27 @@
+
+Test RMarkdown
+===============================
+author: "Vinod"  
+date: "15 July 2017"  
+
+Test document prepared to understand the usage
+
+This document does the following 
+- Loads the default airquality data in R (CRAN)
+```{r}
+library(datasets)
+data("airquality")
+
+```
+
+- Reports the summary of the 
+```{r}
+summary(airquality)
+
+```
+
+- Plot of the dependencies using pairs
+``` {r}
+pairs(airquality)
+```
+

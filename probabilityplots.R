@@ -1,0 +1,33 @@
+xseq<-seq(-5,5,0.1)
+densities<-dnorm(xseq, 0,1)
+densities1<-dnorm(xseq, 0,3)
+densities2<-dnorm(xseq, 3,1)
+densities3<-dnorm(xseq, 3,3)
+
+par(mfrow=c(1,4), mar=c(3,4,4,2))
+plot(xseq, densities, col="darkgreen",xlab="", ylab="Density", type="l",lwd=2, cex=2, main="PDF of Standard Normal", cex.axis=.8)
+plot(xseq, densities1, col="darkgreen",xlab="", ylab="Density1", type="l",lwd=2, cex=2, main="PDF of Standard Normal", cex.axis=.8)
+plot(xseq, densities2, col="darkgreen",xlab="", ylab="Density2", type="l",lwd=2, cex=2, main="PDF of Standard Normal", cex.axis=.8)
+plot(xseq, densities3, col="darkgreen",xlab="", ylab="Density3", type="l",lwd=2, cex=2, main="PDF of Standard Normal", cex.axis=.8)
+
+cumulative<-pnorm(xseq, 0, 1)
+cumulative1<-pnorm(xseq, 0, 3)
+cumulative2<-pnorm(xseq, 3, 1)
+cumulative3<-pnorm(xseq, 3, 3)
+par(mfrow=c(1,4), mar=c(3,4,4,2))
+plot(xseq, cumulative, col="darkorange", xlab="", ylab="Cumulative Probability",type="l",lwd=2, cex=2, main="CDF of Standard Normal", cex.axis=.8)
+plot(xseq, cumulative1, col="darkorange", xlab="", ylab="Cumulative Probability1",type="l",lwd=2, cex=2, main="CDF of Standard Normal", cex.axis=.8)
+plot(xseq, cumulative2, col="darkorange", xlab="", ylab="Cumulative Probability2",type="l",lwd=2, cex=2, main="CDF of Standard Normal", cex.axis=.8)
+plot(xseq, cumulative3, col="darkorange", xlab="", ylab="Cumulative Probability3",type="l",lwd=2, cex=2, main="CDF of Standard Normal", cex.axis=.8)
+
+
+quants<-qnorm(xseq,0,1)
+quants1<-qnorm(xseq,0,3)
+quants2<-qnorm(xseq,3,1)
+quants3<-qnorm(xseq,3,3)
+par(mfrow=c(1,4), mar=c(3,4,4,2))
+plot(xseq, quants, col="darkorange", xlab="", ylab="quant",type="l",lwd=2, cex=2, main="quantile", cex.axis=.8)
+plot(xseq, quants1, col="darkorange", xlab="", ylab="quant1",type="l",lwd=2, cex=2, main="quantile", cex.axis=.8)
+plot(xseq, quants2, col="darkorange", xlab="", ylab="quant2",type="l",lwd=2, cex=2, main="quantile", cex.axis=.8)
+plot(xseq, quants3, col="darkorange", xlab="", ylab="quant3",type="l",lwd=2, cex=2, main="quantile", cex.axis=.8)
+

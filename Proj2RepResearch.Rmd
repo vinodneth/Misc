@@ -1,0 +1,151 @@
+Coursera - Analysis Weather events - based on harm to population and economic consequence
+==============================================
+*This Markdown document has been prepared to publish the analysis outcome for the assignment in RPub*
+
+## Introduction
+This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
+
+## Loading the data
+``` {r}
+library(dplyr)
+
+setwd("C:/Users/User/Coursera/Cs5Wk4")
+storm<-read.csv("StormData.csv.bz2")
+
+```
+
+## Processing data
+
+```{r}
+## Trim columns to what is required for the analysis
+keepCol <- c("BGN_DATE", "EVTYPE", "FATALITIES", "INJURIES", "PROPDMG", "PROPDMGEXP", "CROPDMG", "CROPDMGEXP")
+reducedStormData <- storm[, keepCol]
+
+## Append column to capture the year
+reducedStormData$year <- as.numeric(format(as.Date(reducedStormData$BGN_DATE, format = "%m/%d/%Y %H:%M:%S"), "%Y"))
+hist(reducedStormData$year, breaks = 30)
+
+## Trim data to keep later years which has more meaningful data - using quantile 
+quant25percent <-quantile(reducedStormData$year, 0.25)
+rStorm <- reducedStormData[reducedStormData$year >= quant25percent, ]
+dim(rStorm)
+```
+
+The final dataset uses data after  `r quant25percent` 
+
+## Q1 : Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+The dataset is analyzed for the fatalities and injury counts to arrive at the answer
+
+*Fatalities View*
+```{r}
+rStorm_tbl <- tbl_df(rStorm)
+byFATALITIES <- group_by(rStorm_tbl, EVTYPE)
+top10Fatalities<- summarise(byFATALITIES,
+                total = sum(FATALITIES)
+) %>% arrange(desc(total)) %>% top_n(10)
+top10Fatalities
+```
+ EXCESS HEAT caused maximum Fatalities  
+*Injury View*
+```{r}
+byINJURIES <- group_by(rStorm_tbl, EVTYPE)
+top10Injuries <- summarise(byINJURIES ,
+                 total = sum(INJURIES)
+) %>% arrange(desc(total)) %>% top_n(10)
+top10Injuries
+```
+ TORNADO caused maximum Injuries  
+
+The listing presented as histogram  
+
+```{r}
+par(mfrow=c(1,2))
+barplot(top10Fatalities$total, 
+        names = top10Fatalities$EVTYPE,
+        xlab = "Event Type",
+        ylab = "Total Deaths",
+        main = "Top 10 Fatal Weather Events")
+
+
+barplot(top10Injuries$total, 
+        names = top10Injuries$EVTYPE,
+        xlab = "Event Type",
+        ylab = "Total Deaths",
+        main = "Top 10 Injuries Weather Events")
+```
+
+
+
+## Q2 : Across the United States, which types of events have the greatest economic consequences?
+
+The economic consequence will need to be identified by totalling the property and crop damages. The property damage and crop damage data will need to be converted into comparable numerical forms using the mutiplier variable provided for each observation
+
+*Following sections complete the processing of the available data *
+
+Helper functions  written to support the conversion
+```{r}
+## converts the multiplier value in data to power of TEN
+toTenPower <- function(x){
+    if(is.numeric(x)) {
+        x <- x
+    }
+    else if(grepl("h", x, ignore.case=TRUE)) {
+        x <- 2
+    }
+    else if(grepl("k", x, ignore.case=TRUE)) {
+        x <- 3
+    }
+    else if(grepl("m", x, ignore.case=TRUE)) {
+        x <- 6
+    }
+    else if(grepl("b", x, ignore.case=TRUE)) {
+        x <- 9
+    }
+    else if(x == "" || x == " "){
+        x <- 0
+    }
+    else{
+        x <- NA
+    }
+    x
+}
+# function to take two parameters num and exp and convert it to one absolute value using above function. non integers become 0
+calculateAmount <- function(num, exp){
+    pow <- toTenPower(exp)
+    if(is.numeric(num)){
+        num <- num * (10 ^ pow)
+    }
+    
+    if(!is.numeric(num)){
+        num <- 0
+    }
+    
+    num
+}
+```
+
+Append columns for property and crop damage after conversion and arrive at the total damage value
+
+```{r}
+rStorm$propDamage <- mapply(calculateAmount, rStorm$PROPDMG, rStorm$PROPDMGEXP)
+rStorm$cropDamage <- mapply(calculateAmount, rStorm$CROPDMG, rStorm$CROPDMGEXP)
+
+totalDam <- aggregate(propDamage + cropDamage~EVTYPE, data=rStorm, sum)
+names(totalDam)[2] <- "total"
+totalDam10 <- arrange(totalDam, desc(total)) %>% top_n(10)
+totalDam10
+
+```
+
+Histogram for the total damage by event
+```{r}
+barplot(totalDam10$total, 
+        names = totalDam10$EVTYPE,
+        cex.names = 0.7,
+        cex.axis = 0.7,
+        xlab = "Event Type",
+        ylab = "Total Crop Damage ($)",
+        main = "Top 10 Events Causing \n Most Total Damage")
+```
+
+Based on the above data FLOOD caused the maximum damage
